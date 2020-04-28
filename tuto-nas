@@ -1,0 +1,47 @@
+INSTALLATION DU DISK NAS SUR DEBIAN 9
+
+1- apt install open-iscsi
+2- vim /etc/iscsi/iscsid.conf
+3- node.startup = automatic (pour activer iscsi au démarrage.)
+node.session.auth.username = login
+node.session.auth.password = password
+discovery.sendtargets.auth.username = login
+discovery.sendtargets.auth.password = login
+
+Changer le login et password par l’ID du Iscsi si la méthode CHAP
+est activé
+
+3.1- Si le "node.startup= automatic" ne fonctionne pas le faire manuellement
+
+iscsiadm --mode node -T targetname -p ip:port -o update -n node.startup -v automatic
+
+4- service iscsi restart
+
+5- sudo iscsiadm --mode discovery --type sendtargets --portal [ IP du NAS]
+(Attention dans target sur le NAS ne pas avoir  mit de initiator group id sur la target)
+
+6- Si tout est bon, on devrait avoir ça (juste un exemple):
+192.168.0.1:3260,1 steam:fs.iscsi.steam
+
+7-sudo iscsiadm --mode node --targetname [ Le nom de votre target] \ --portal [Ip du NAS] --login
+on a désormais connecté notre NAS sur notre debian
+
+8-On va maintenant le monter 
+fdisk /dev/sdb
+Le partitionner n,p
+Plus le “Write” W
+
+9-On va maintenant le formater
+mkfs.ext4 /dev/sdb
+
+8- ls/dev pour vérifier qu’il est bien là
+
+9- ls /dev/disk/by-* 
+on va chercher le disk “scsi” dans le by-id
+
+10- On va maintenant monter le disk  dans /etc/fstab pour faire en sorte qu'il soit monté automatiquement au démarrage
+/dev/disk/by-id/scsi-14e415300000000000000000006000000a134000000001000-part1    /test      ext3     _netdev 	0   0
+                                                                          point de montage type   serveur distant 
+ 11- reboot
+ 12- df -h
+ 13- Magie ! :)
