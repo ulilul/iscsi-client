@@ -1,0 +1,78 @@
+apt install vsftpd
+vim /etc/vsftpd.conf
+
+#ligne 14 : Changer pour écouter IPv4
+listen=YES
+
+# ligne 31: Décommenter
+write_enable=YES
+
+# ligne 122: décommenter ( activer chroot qui permet de limité l'user à son /home )
+chroot_local_user=YES
+
+# ligne 123: décommenter ( activer la liste chroot )
+chroot_list_enable=YES
+
+# ligne 125: décommenter
+chroot_list_file=/etc/vsftpd.chroot_list
+
+# ligne 131: décommenter
+ls_recurse_enable=YES
+
+# On maintenant créer des utilisateurs local ( si c'est pas déja fait, je vous passe cette étape)
+
+vim /etc/vsftpd.chroot_list (on va créer un fichier avec la liste des utilisateurs qui pourront utiliser le SFTP)
+
+# AJout des utilisateurs autorisent à se déplacer sur leur /home
+user01
+
+systemctl restart vsftpd
+
+# Nous allons maintement créer un certificat auto-signé pour pouvoir utiliser SFTP et d'éviter que nos identifiants ne passe en clair 
+
+cd /etc/ssl/private
+
+openssl req -x509 -nodes -newkey rsa:2048 -keyout vsftpd.pem -out vsftpd.pem -days 365
+
+chmod 600 vsftpd.pem
+
+# Retournons maintement dans notre vsftpd.conf 
+
+# ligne 149 : changé la ligne par :
+rsa_cert_file=/etc/ssl/private/vsftpd.pem
+# ligne 150 : changé la ligne par :
+rsa_private_key_file=/etc/ssl/private/vsftpd.pem
+# écrire à la suite :
+ssl_enable=YES
+ssl_ciphers=HIGH
+ssl_tlsv1=YES
+ssl_sslv2=NO
+ssl_sslv3=NO
+force_local_data_ssl=YES
+force_local_logins_ssl=YES
+
+systemctl restart vsftpd
+
+# Voila, notre serveur FTP et enfin configuré, mais nous voudrions que l'utilisateur puisse utiliser le disk NAS pour enregistrer ces sauvegardes
+
+# notre iscsi est monté sur /media/FTP-NAS dans notre exemple
+
+mkdir /media/FTP-NAS Dossier_Partage
+mkdir /home/user01/partage
+
+# Ne pas oublier de donner les droits du dossier à votre utilisateur 
+
+mount --bind /media/FTP-NAS/Dossier_Partage /home/user01/partage
+
+# Voila, maintenant vous pouvez tester de mettre un fichier dans le /partage vous verrez que dans /Dossier_Partage le fichier sera la 
+
+#On va maintenant faire en sorte que se soit fait automatique en démarrage 
+
+vim /etc/fstab
+
+/media/FTP-NAS/Dossier_Partage /home/user01/partage none bind 0     0
+
+vous pouvez maintenant redémarrer et re-tester 
+
+:)
+
