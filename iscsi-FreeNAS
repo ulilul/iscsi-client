@@ -1,0 +1,75 @@
+# Dans ce tuto, nous allons voir comment crée un Iscsi via FreeNAS pour pouvoir ensuite le lier sur GNU/LINUX
+
+Première, il vous faudra avoir crée un serveur FreeNAS(je vous laisse faire, c'est très simple), une fois connecté il nous reste à mettre une IP static
+
+# Vous verrez une liste de numéro 
+
+1 (Pour configurer l'interface réseau)
+1 ( votre carte réseau)
+n ( ne pas delete l'interface)
+n ( ne pas remove)
+n ( ne pas utiliser de DHCP)
+y ( configurer une interface Ipv4)
+[votre IP]
+[votre netmask]
+[votre gateway]
+
+# Une fois cela fait, vous pouvez maintenant vous connecter sur l'interface via l'adresse Ipv4 que vous avez renseignées
+
+Rendez-vous dans storage puis dans pool
+
+create pool
+( si vous avez plusieurs disk vous pouvez effectué du RAID)
+
+Donnez un nom à votre raid - > sélectionné vos disk - > puis sur la flèche de droite - > create - > confirm
+Vous voila en RAID avec vos disk sélectionné 
+
+# Il faut maintenant créer un Zvol pour notre Iscsi 
+
+Cliquez sur les points à droite et create a Zvol
+Donnez une capacité de 80% du disk comme demandé puis save
+
+# Rendez-vous maintenant dans Sharing - > Iscsi
+Donnez un nom à votre Iscsi selon la méthode "RFC3721", puis dirigez-vous vers "Authorized Access"
+
+# On va mettre en place une sécurité CHAP pour éviter que tout le monde puisse ce connecter au NAS
+Entrez un numéro d'identification 
+Entrez un nom d'utilisateur ainsi qu'un mdp puis save
+
+# Rendez-vous maintenant dans portail
+Discovery Auth Method : CHAP
+Discovery Auth Group [ votre numéro d'identification ]
+IP Address [ normalement dans le menus déroulant votre Ip du NAS est déja présente]
+Save
+
+# Rendez-vous dans target 
+Donnez un nom à votre target encore selon la méthode "RFC3721"
+Portal group id
+[ cliquez sur le menus déroulant mais ça sera généralement 1]
+NE PAS METTRE D'INITIATOR GROUP iD !!
+Auth method : CHAP
+Auth Group [ votre numéro d'identification ]
+Save
+
+# Rendez-vous maintenant dans Extents
+Donnez lui un nom
+Extent type : Device
+Device : [Votre Zvol que nous avons crée ]
+# On laissera la configuration par défaut 
+Save
+ 
+ # Rendez-vous dans Associated targets 
+ Target [ votre target crée juste avant]
+ LUN iD [ mettez 1 par défaut ]
+ Extent [ votre extent crée juste avant]
+ save
+ 
+ # Voila notre Iscsi est prêt à l'emploie
+ 
+ Oubliez pas d'aller dans Services -> Activer Icsi 
+ 
+ Voila, vous pouvez maintenant suivre le tuto pour joindre le Iscsi sur Debian avec open-iscsi client :)
+
+
+
+
